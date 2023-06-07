@@ -27,6 +27,7 @@ library(raster)
 library(rgeos)
 library(geodata)
 library(terra)
+library(rgdal)
 ```
 
 # Study area and planning unit grid
@@ -116,4 +117,13 @@ We can see that the planning unit grid has a data frame containing IDs and areas
 head(hex_grid)
 ```
 
-#Import conservation features data
+# Import conservation features data
+
+Import some example conservation feature data. 'animals.zip' In this case, we have 9 species of terrestrial mammals 
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE}
+
+unzip("animals.zip")
+zipmap <- readOGR(dsn = ".", layer = "animals" )
+plot(zipmap)
+```
