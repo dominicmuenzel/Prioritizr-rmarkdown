@@ -255,7 +255,7 @@ eval_n_summary(p1, data.frame(s1$solution_1))
 eval_cost_summary(p1, data.frame(s1$solution_1))
 
 #Plot showing proportion of species ranges protected
-featureSUM<-eval_feature_representation_summary(p1A, data.frame(s1A$solution_1)) %>% data.frame()
+featureSUM<-eval_feature_representation_summary(p1, data.frame(s1$solution_1)) %>% data.frame()
 barplot(featureSUM$relative_held, names.arg=rownames(featureSUM),horiz=TRUE,las=2,xlab="Proportion protected")
 abline(v = 0.3, col = "red")
 
