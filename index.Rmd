@@ -142,7 +142,7 @@ In this case our planning unit grid is a shapefile, but *prioritizr* also accept
 
 <br>
 
-# 3. Import conservation features
+# 3. Preparing conservation features
 
 Now we will import some example conservation feature data. 
 
@@ -203,7 +203,7 @@ rijDF<-data.frame("pu"=as.numeric(m$ID),"species"=featuresDF$id[match(m$binomial
 ```
 <br>
 
-# 4. Run prioritisation
+# 4. Running prioritisation
 
 ## 4.1. Minimum set objective
 
@@ -244,4 +244,61 @@ legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not sel
 ```
 <br>
 
+We can evaluate the performance of the solution to see, for example, how many planning units are selected, what the total cost is, how well conservation features are captured in the solution.
 
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+#Calculate planning unit number statistic
+eval_n_summary(p1, data.frame(s1$solution_1))
+
+#Calculate cost statistic
+eval_cost_summary(p1, data.frame(s1$solution_1))
+
+#Plot showing proportion of species ranges protected
+featureSUM<-eval_feature_representation_summary(p1A, data.frame(s1A$solution_1)) %>% data.frame()
+barplot(featureSUM$relative_held, names.arg=rownames(featureSUM),horiz=TRUE,las=2,xlab="Proportion protected")
+abline(v = 0.3, col = "red")
+
+```
+<br>
+
+## 4.2. Other objectives
+
+There are many other objectives which can be used, these are described [here](https://cran.r-project.org/web/packages/prioritizr/vignettes/package_overview.html) 
+
+
+* **Maximum cover objective:** Represent at least one instance of as many features as possible within a given budget
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%  add_max_cover_objective(budget = X)
+```
+<br>
+
+* **Maximum features objective:** Fulfill as many targets as possible while ensuring that the cost of the solution does not exceed a budget
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%   add_max_features_objective(budget = X)
+```
+<br>
+
+* **Minimum shortfall objective:** Minimize the overall (weighted sum) shortfall for as many targets as possible while ensuring that the cost of the solution does not exceed a budget.
+
+* **Minimum largest shortfall objective:** Minimize the largest (maximum) shortfall while ensuring that the cost of the solution does not exceed a budget.
+
+* **Maximum phylogenetic diversity objective:** Maximize the phylogenetic diversity of the features represented in the solution subject to a budget
+
+* **Maximum phylogenetic endemism objective:** Maximize the phylogenetic endemism of the features represented in the solution subject to a budget
+
+* **Maximum utility objective:** Secure as much of the features as possible without exceeding a budget. 
+
+## 4.3. Target setting
+
+
+# X. Other useful resources
+
+Calibrating trade-offs tutorial https://cran.r-project.org/web/packages/prioritizr/vignettes/calibrating_trade-offs_tutorial.html 
+Connectivity tutorial https://cran.r-project.org/web/packages/prioritizr/vignettes/connectivity_tutorial.html
+Gurobi installation guide https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html
+Management zones tutorial https://cran.r-project.org/web/packages/prioritizr/vignettes/management_zones_tutorial.html 
+Package overview https://cran.r-project.org/web/packages/prioritizr/vignettes/package_overview.html 
+Getting started https://cran.r-project.org/web/packages/prioritizr/vignettes/prioritizr.html
+Publication record https://cran.r-project.org/web/packages/prioritizr/vignettes/publication_record.html
+Solver benchmarks https://cran.r-project.org/web/packages/prioritizr/vignettes/solver_benchmarks.html
