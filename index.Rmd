@@ -2,7 +2,10 @@
 title: "RMrk"
 author: "Dominic Muenzel"
 date: "2023-06-07"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
@@ -10,14 +13,22 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
   
 <br>
-  
-  
-This is an R Markdown tutorial on using prioritizr https://prioritizr.net/ to perform conservation planning.
 
-# Importing libraries
-
-
+# Introduction  
   
+This is an R Markdown tutorial on using *prioritizr* https://prioritizr.net/ to perform spatial conservation planning. 
+
+Prioritizr supports a broad range of objectives, constraints, and penalties allowing one to answer custom-tailored conservation planning exercises.
+
+Elements it can incorporate include multiple management zones, structural connectivity, functional connectivity, amongst others.
+
+The algorithm solvers provide optimal solutions (whereas most tools such as Marxan generate near-optimal solutions), and are orders of magnitude faster if using the commercial Gurobi solver https://www.gurobi.com/ which anyone with an academic e-mail can get for free. 
+
+
+<br>
+
+# 1. Importing libraries
+
 ```{r, warning=FALSE,message=FALSE}
 library(dplyr)
 library(tidyr)
@@ -28,31 +39,38 @@ library(rgeos)
 library(geodata)
 library(terra)
 library(rgdal)
+library(prioritizr)
 ```
+<br>
 
-# Study area and planning unit grid
+# 2. Setting up study area and planning unit grid
   
 In this example, our planning region will be Aceh, Indonesia. 
   
 ```{r, warning=FALSE,message=FALSE,eval=TRUE}
 
-#Download Indonesia shapefile
+# download Indonesia shapefile
 study_area <- gadm(country="IDN", level=1, path=tempdir()) 
 
-#Subset to Aceh
+# subset to Aceh
 study_area <- study_area %>% terra::subset(NAME_1=="Aceh",NSE=T) %>% as( "Spatial")
 
-#Transform to projected CRS
+# transform to projected CRS
 study_area_utm <-   CRS("+proj=aea +lat_0=-15 +lon_0=125 +lat_1=7 +lat_2=-32 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs") %>% 
   spTransform(study_area, .)
 
 
 ```
+<br>
 
-Next, we will create a hexagonal planning unit grid. The code below is adapted from a M. Strimas Mackey [tutorial](https://strimas.com/post/hexagonal-grids/#:~:text=Creating%20grids-,Hexagonal%20grids,grid%20of%20polygons%20with%20HexPoints2SpatialPolygons%20.).
+Next, we will create a hexagonal planning unit grid. A planning unit is a spatial management unit which is either selected or not selected in a solution.
+
+The code below is adapted from a M. Strimas Mackey [tutorial](https://strimas.com/post/hexagonal-grids/#:~:text=Creating%20grids-,Hexagonal%20grids,grid%20of%20polygons%20with%20HexPoints2SpatialPolygons%20.). If you check out the link you can read about the benefits and drawbacks of hexagonal vs square planning units.
+
+
 
 ```{r, warning=FALSE,message=FALSE,eval=TRUE}
-#This function generates a planning unit grid. 'x' is a projected shapefile of the region. 'type' is either square or hexagonal. 'cell_width' or 'cell_area' is supplied in units of the projection. 'clip' determines whether the grid is clipped (TRUE) or not (FALSE) to the region
+# this function generates a planning unit grid. 'x' is a projected shapefile of the region. 'type' is either square or hexagonal. 'cell_width' or 'cell_area' is supplied in units of the projection. 'clip' determines whether the grid is clipped (TRUE) or not (FALSE) to the region
 make_grid <- function(x, type, cell_width, cell_area, clip = FALSE) {
   if (!type %in% c("square", "hexagonal")) {
     stop("Type must be either 'square' or 'hexagonal'")
@@ -101,29 +119,129 @@ make_grid <- function(x, type, cell_width, cell_area, clip = FALSE) {
   return(g)
 }
 
-#Make a 100km2 hexagonal grid clipped to Aceh
+# make a 100km2 hexagonal grid clipped to Aceh. Note that because the CRS is in meters, the cell area is in meters squared. 
 hex_grid<-make_grid(x=study_area_utm, type = "hexagonal", cell_area = 100000000, clip = TRUE)
 
-#Plot the Aceh shapefile and planning unit grid
+# plot the Aceh shapefile and planning unit grid
 plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
 text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
 plot(hex_grid, border = "orange",add=T)
 
 ```
+<br>
 
 We can see that the planning unit grid has a data frame containing IDs and areas (in m^2^). Planning units should have unique IDs.
+
 
 ```{r, warning=FALSE,message=FALSE,eval=TRUE}
 head(hex_grid)
 ```
+<br>
 
-# Import conservation features data
+In this case our planning unit grid is a shapefile, but *prioritizr* also accepts raster planning unit grids. 
 
-Import some example conservation feature data. 'animals.zip' In this case, we have 9 species of terrestrial mammals 
+<br>
+
+# 3. Import conservation features
+
+Now we will import some example conservation feature data. 
+
+'animals.zip' contains the species ranges for nine species of terrestrial mammals from the IUCN Red List database and can be found [here](https://github.com/dominicmuenzel/Prioritizr-rmarkdown/blob/main/animals.zip). 
+
+Conservation features can also be habitat types, ecosystem services, or landscape metrics (e.g. connectivity). They can be presence-absence or continuous data. There is no limit as to how many conservation features can be included in a problem.
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+unzip("animals.zip")
+animals <- readOGR(dsn = ".", layer = "animals" )
+plot(animals)
+```
+<br>
+
+We need to calculate how much of each conservation feature is contained within each planning unit. In ArcGIS this can be done with the **tabulate intersection** tool.
+```{r, warning=FALSE,message=FALSE,eval=TRUE}
+
+# intersect grid with features
+i <- intersect(hex_grid, animals)
+
+# compute area
+i$area <- abs(area(i))
+
+# get the attribute table
+d <- data.frame(i)
+
+# aggregate and sum the areas
+m <- aggregate(d[, 'area', drop=FALSE], d[, c('ID', 'binomial')], sum)
+
+```
+<br>
+
+Next we want to create three sets of data frames.  
+
+  * **puDF** describes the planning units and has two columns: 
+    + planning unit IDs
+    + planning unit areas
+  * **featuresDF** describes the conservation features and has two columns:
+    + conservation features IDs 
+    + conservation features names
+  * **rijDF** gives how much of each conservation is in each planning unit and has three columns:
+    + planning unit IDs
+    + conservation features IDs
+    + amount of conservation feature in the planning unit
 
 ```{r, warning=FALSE,message=FALSE,eval=TRUE}
 
-unzip("animals.zip")
-zipmap <- readOGR(dsn = ".", layer = "animals" )
-plot(zipmap)
+#Area of planning units changed to km2 instead of m2, as prioritizr will give a warning message if values are too high 
+puDF<-data.frame("id"=as.numeric(hex_grid$ID),"cost"=hex_grid$area/1e6)
+
+
+featuresDF<-data.frame("id"=as.numeric(as.factor(sort(unique(m$binomial))
+)),"name"=sort(unique(m$binomial)))
+
+#Area of conservation features in planning units changed to km2 instead of m2, as prioritizr will give a warning message if values are too high 
+rijDF<-data.frame("pu"=as.numeric(m$ID),"species"=featuresDF$id[match(m$binomial,featuresDF$name)],"amount"=m$area/1e6)
 ```
+<br>
+
+# 4. Run prioritisation
+
+## 4.1. Minimum set objective
+
+In this first scenario, we use a **minimum set objective**, which means we seek to minimise the cost of the solution (similar to Marxan). We set a target to protect 30% of species ranges.
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+
+#Create the prioritizr problem
+p1 <- problem(puDF, featuresDF, cost_column = "cost",rij = rijDF) %>%
+  
+  #Add minimum set objective 
+  add_min_set_objective() %>%
+  
+  #Add relative targets, 30% target for all species ranges
+  add_relative_targets(rep(0.3,nrow(featuresDF))) %>%
+  
+  #Add the default solver, a gap of 0 means find the optimal solution, a gap of 0.1 means find a solution within 10% optimality
+  add_default_solver(gap=0) %>%
+
+  #Add binary decisions of either selecting or not selecting planning units
+  add_binary_decisions() 
+
+#Solve the conservation planning problem
+s1<-solve(p1)
+
+#Create a vector for colouring the planning units 
+colorvector<-s1$solution_1
+colorvector[which(colorvector==0)]<-NA
+colorvector[which(colorvector==1)]<-"blue"
+
+#Plot the solution
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+terra::plot(hex_grid, col=colorvector,border = "orange",add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"),
+       fill=c(NA, "blue"),  cex=0.8,bg=NA)
+```
+<br>
+
+
