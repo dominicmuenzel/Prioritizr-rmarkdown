@@ -9,11 +9,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Dominic Muenzel" />
+<meta name="author" content="Dominic Muenzel (dm710@kent.ac.uk)" />
 
 <meta name="date" content="2023-06-07" />
 
-<title>RMrk</title>
+<title>prioritizr tutorial</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,8 +350,8 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">RMrk</h1>
-<h4 class="author">Dominic Muenzel</h4>
+<h1 class="title toc-ignore">prioritizr tutorial</h1>
+<h4 class="author">Dominic Muenzel (<a href="mailto:dm710@kent.ac.uk" class="email">dm710@kent.ac.uk</a>)</h4>
 <h4 class="date">2023-06-07</h4>
 
 </div>
@@ -628,31 +628,42 @@ described <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/
 instance of as many features as possible within a given budget</li>
 </ul>
 <pre class="r"><code>problem() %&gt;%  add_max_cover_objective(budget = X)</code></pre>
-<p><br></p>
 <ul>
 <li><strong>Maximum features objective:</strong> Fulfill as many targets
 as possible while ensuring that the cost of the solution does not exceed
 a budget</li>
 </ul>
 <pre class="r"><code>problem() %&gt;%   add_max_features_objective(budget = X)</code></pre>
-<p><br></p>
 <ul>
-<li><p><strong>Minimum shortfall objective:</strong> Minimize the
-overall (weighted sum) shortfall for as many targets as possible while
-ensuring that the cost of the solution does not exceed a
-budget.</p></li>
-<li><p><strong>Minimum largest shortfall objective:</strong> Minimize
-the largest (maximum) shortfall while ensuring that the cost of the
-solution does not exceed a budget.</p></li>
-<li><p><strong>Maximum phylogenetic diversity objective:</strong>
-Maximize the phylogenetic diversity of the features represented in the
-solution subject to a budget</p></li>
-<li><p><strong>Maximum phylogenetic endemism objective:</strong>
-Maximize the phylogenetic endemism of the features represented in the
-solution subject to a budget</p></li>
-<li><p><strong>Maximum utility objective:</strong> Secure as much of the
-features as possible without exceeding a budget.</p></li>
+<li><strong>Minimum shortfall objective:</strong> Minimise the overall
+(weighted sum) shortfall for as many targets as possible while ensuring
+that the cost of the solution does not exceed a budget.</li>
 </ul>
+<pre class="r"><code>problem() %&gt;%    add_min_shortfall_objective(budget = X)</code></pre>
+<ul>
+<li><strong>Minimum largest shortfall objective:</strong> Minimise the
+largest (maximum) shortfall while ensuring that the cost of the solution
+does not exceed a budget.</li>
+</ul>
+<pre class="r"><code>problem() %&gt;%     add_min_largest_shortfall_objective(budget = X)</code></pre>
+<ul>
+<li><strong>Maximum phylogenetic diversity objective:</strong> Maximize
+the phylogenetic diversity of the features represented in the solution
+subject to a budget</li>
+</ul>
+<pre class="r"><code>problem() %&gt;%     add_max_phylo_div_objective(budget = X,tree = Y)</code></pre>
+<ul>
+<li><strong>Maximum phylogenetic endemism objective:</strong> Maximize
+the phylogenetic endemism of the features represented in the solution
+subject to a budget</li>
+</ul>
+<pre class="r"><code>problem() %&gt;%     add_max_phylo_end_objective(budget = X,tree = Y)</code></pre>
+<ul>
+<li><strong>Maximum utility objective:</strong> Secure as much of the
+features as possible without exceeding a budget.</li>
+</ul>
+<pre class="r"><code>problem() %&gt;%     add_max_utility_objective(budget = X)</code></pre>
+<p><br></p>
 </div>
 <div id="target-setting" class="section level2">
 <h2>4.3. Target setting</h2>
@@ -660,14 +671,14 @@ features as possible without exceeding a budget.</p></li>
 </div>
 <div id="x.-other-useful-resources" class="section level1">
 <h1>X. Other useful resources</h1>
-<p>Calibrating trade-offs tutorial <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/calibrating_trade-offs_tutorial.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/calibrating_trade-offs_tutorial.html</a>
-Connectivity tutorial <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/connectivity_tutorial.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/connectivity_tutorial.html</a>
-Gurobi installation guide <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html</a>
-Management zones tutorial <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/management_zones_tutorial.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/management_zones_tutorial.html</a>
-Package overview <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/package_overview.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/package_overview.html</a>
-Getting started <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/prioritizr.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/prioritizr.html</a>
-Publication record <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/publication_record.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/publication_record.html</a>
-Solver benchmarks <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/solver_benchmarks.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/solver_benchmarks.html</a></p>
+<p>Calibrating trade-offs tutorial <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/calibrating_trade-offs_tutorial.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/calibrating_trade-offs_tutorial.html</a></p>
+<p>Connectivity tutorial <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/connectivity_tutorial.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/connectivity_tutorial.html</a></p>
+<p>Gurobi installation guide <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html</a></p>
+<p>Management zones tutorial <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/management_zones_tutorial.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/management_zones_tutorial.html</a></p>
+<p>Package overview <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/package_overview.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/package_overview.html</a></p>
+<p>Getting started <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/prioritizr.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/prioritizr.html</a></p>
+<p>Publication record <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/publication_record.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/publication_record.html</a></p>
+<p>Solver benchmarks <a href="https://cran.r-project.org/web/packages/prioritizr/vignettes/solver_benchmarks.html" class="uri">https://cran.r-project.org/web/packages/prioritizr/vignettes/solver_benchmarks.html</a></p>
 </div>
 
 

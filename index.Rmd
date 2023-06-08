@@ -1,6 +1,6 @@
 ---
-title: "RMrk"
-author: "Dominic Muenzel"
+title: "prioritizr tutorial"
+author: "Dominic Muenzel (dm710@kent.ac.uk)"
 date: "2023-06-07"
 output: 
   html_document:
@@ -271,23 +271,37 @@ There are many other objectives which can be used, these are described [here](ht
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
 problem() %>%  add_max_cover_objective(budget = X)
 ```
-<br>
 
 * **Maximum features objective:** Fulfill as many targets as possible while ensuring that the cost of the solution does not exceed a budget
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
 problem() %>%   add_max_features_objective(budget = X)
 ```
-<br>
 
-* **Minimum shortfall objective:** Minimize the overall (weighted sum) shortfall for as many targets as possible while ensuring that the cost of the solution does not exceed a budget.
 
-* **Minimum largest shortfall objective:** Minimize the largest (maximum) shortfall while ensuring that the cost of the solution does not exceed a budget.
+* **Minimum shortfall objective:** Minimise the overall (weighted sum) shortfall for as many targets as possible while ensuring that the cost of the solution does not exceed a budget.
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%    add_min_shortfall_objective(budget = X)
+```
+
+* **Minimum largest shortfall objective:** Minimise the largest (maximum) shortfall while ensuring that the cost of the solution does not exceed a budget.
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%     add_min_largest_shortfall_objective(budget = X)
+```
 
 * **Maximum phylogenetic diversity objective:** Maximize the phylogenetic diversity of the features represented in the solution subject to a budget
-
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%     add_max_phylo_div_objective(budget = X,tree = Y)
+```
 * **Maximum phylogenetic endemism objective:** Maximize the phylogenetic endemism of the features represented in the solution subject to a budget
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%     add_max_phylo_end_objective(budget = X,tree = Y)
+```
 
 * **Maximum utility objective:** Secure as much of the features as possible without exceeding a budget. 
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%     add_max_utility_objective(budget = X)
+```
+<br>
 
 ## 4.3. Target setting
 
@@ -295,10 +309,17 @@ problem() %>%   add_max_features_objective(budget = X)
 # X. Other useful resources
 
 Calibrating trade-offs tutorial https://cran.r-project.org/web/packages/prioritizr/vignettes/calibrating_trade-offs_tutorial.html 
+
 Connectivity tutorial https://cran.r-project.org/web/packages/prioritizr/vignettes/connectivity_tutorial.html
+
 Gurobi installation guide https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html
+
 Management zones tutorial https://cran.r-project.org/web/packages/prioritizr/vignettes/management_zones_tutorial.html 
+
 Package overview https://cran.r-project.org/web/packages/prioritizr/vignettes/package_overview.html 
+
 Getting started https://cran.r-project.org/web/packages/prioritizr/vignettes/prioritizr.html
+
 Publication record https://cran.r-project.org/web/packages/prioritizr/vignettes/publication_record.html
+
 Solver benchmarks https://cran.r-project.org/web/packages/prioritizr/vignettes/solver_benchmarks.html
