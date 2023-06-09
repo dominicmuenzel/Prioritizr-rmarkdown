@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     toc_depth: 2
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -207,7 +208,9 @@ rijDF<-data.frame("pu"=as.numeric(m$ID),"species"=featuresDF$id[match(m$binomial
 
 ## 4.1. Minimum set objective
 
-In this first scenario, we use a **minimum set objective**, which means we seek to minimise the cost of the solution (similar to Marxan). We set a target to protect 30% of species ranges.
+In this first scenario, we use a **minimum set objective**, which means we seek to minimise the cost of the solution (similar to Marxan). We set a target to protect 30% of nine species ranges.
+
+As the cost, we use the area of the planning units. If we had other cost layers, we could use these instead. Examples include land acquisition costs, management costs, restoration costs, accessibility costs, and opportunity costs. 
 
 ```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
 
@@ -231,14 +234,12 @@ p1 <- problem(puDF, featuresDF, cost_column = "cost",rij = rijDF) %>%
 s1<-solve(p1)
 
 #Create a vector for colouring the planning units 
-colorvector<-s1$solution_1
-colorvector[which(colorvector==0)]<-NA
-colorvector[which(colorvector==1)]<-"blue"
+ colorvector<-ifelse(s1$solution_1==1,"blue",NA)
 
 #Plot the solution
 plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
 text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
-terra::plot(hex_grid, col=colorvector,border = "orange",add=T)
+plot(hex_grid, col=colorvector,border = "orange",add=T)
 legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"),
        fill=c(NA, "blue"),  cex=0.8,bg=NA)
 ```
@@ -246,7 +247,7 @@ legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not sel
 
 We can evaluate the performance of the solution to see, for example, how many planning units are selected, what the total cost is, how well conservation features are captured in the solution.
 
-```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+```{r, warning=FALSE,message=FALSE,eval=TRUE}
 
 #Calculate planning unit number statistic
 eval_n_summary(p1, data.frame(s1$solution_1))
@@ -269,42 +270,70 @@ There are many other objectives which can be used, these are described [here](ht
 
 * **Maximum cover objective:** Represent at least one instance of as many features as possible within a given budget
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
-problem() %>%  add_max_cover_objective(budget = X)
+problem() %>% add_max_cover_objective(budget = X)
 ```
 
 * **Maximum features objective:** Fulfill as many targets as possible while ensuring that the cost of the solution does not exceed a budget
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
-problem() %>%   add_max_features_objective(budget = X)
+problem() %>% add_max_features_objective(budget = X)
 ```
 
 
 * **Minimum shortfall objective:** Minimise the overall (weighted sum) shortfall for as many targets as possible while ensuring that the cost of the solution does not exceed a budget.
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
-problem() %>%    add_min_shortfall_objective(budget = X)
+problem() %>% add_min_shortfall_objective(budget = X)
 ```
 
 * **Minimum largest shortfall objective:** Minimise the largest (maximum) shortfall while ensuring that the cost of the solution does not exceed a budget.
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
-problem() %>%     add_min_largest_shortfall_objective(budget = X)
+problem() %>% add_min_largest_shortfall_objective(budget = X)
 ```
 
 * **Maximum phylogenetic diversity objective:** Maximize the phylogenetic diversity of the features represented in the solution subject to a budget
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
-problem() %>%     add_max_phylo_div_objective(budget = X,tree = Y)
+problem() %>% add_max_phylo_div_objective(budget = X,tree = Y)
 ```
 * **Maximum phylogenetic endemism objective:** Maximize the phylogenetic endemism of the features represented in the solution subject to a budget
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
-problem() %>%     add_max_phylo_end_objective(budget = X,tree = Y)
+problem() %>% add_max_phylo_end_objective(budget = X,tree = Y)
 ```
 
 * **Maximum utility objective:** Secure as much of the features as possible without exceeding a budget. 
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
-problem() %>%     add_max_utility_objective(budget = X)
+problem() %>% add_max_utility_objective(budget = X)
 ```
 <br>
 
 ## 4.3. Target setting
 
+Targets specify the minimum amount or proportion of a feature’s distribution that needs to be protected in the solution. Not all objectives need or can be combined with targets. Different targets can be set for different features.
+
+* **Absolute targets:** The total amount of each feature in the study area that needs to be secured. 
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_min_set_objective() %>% add_absolute_targets(X)
+```
+<br>
+
+* **Relative targets:** The proportion of each feature in the study area that needs to be secured. 
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_min_set_objective() %>% add_relative_targets(0.3)
+```
+<br>
+
+* **Log-linear targets:** Targets are expressed using scaling factors and log-linear interpolation. 
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_min_set_objective() %>% add_loglinear_targets(X)
+```
+<br>
+
+# 4.4. Adding constraints
+
+Constraints can be added so that solutions exhibit a specific property. 
+
+* **Locked in constraints:** Certain planning units are selected in the solution from the start and kept in as solutions. Protected areas might be locked in. 
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+
+```
 
 # X. Other useful resources
 

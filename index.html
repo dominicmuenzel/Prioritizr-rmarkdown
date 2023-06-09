@@ -607,12 +607,18 @@ legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c(&quot;No
 how many planning units are selected, what the total cost is, how well
 conservation features are captured in the solution.</p>
 <pre class="r"><code>#Calculate planning unit number statistic
-eval_n_summary(p1, data.frame(s1$solution_1))
-
-#Calculate cost statistic
-eval_cost_summary(p1, data.frame(s1$solution_1))
-
-#Plot showing proportion of species ranges protected
+eval_n_summary(p1, data.frame(s1$solution_1))</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   summary     n
+##   &lt;chr&gt;   &lt;dbl&gt;
+## 1 overall    39</code></pre>
+<pre class="r"><code>#Calculate cost statistic
+eval_cost_summary(p1, data.frame(s1$solution_1))</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   summary  cost
+##   &lt;chr&gt;   &lt;dbl&gt;
+## 1 overall 3589.</code></pre>
+<pre class="r"><code>#Plot showing proportion of species ranges protected
 featureSUM&lt;-eval_feature_representation_summary(p1, data.frame(s1$solution_1)) %&gt;% data.frame()
 barplot(featureSUM$relative_held, names.arg=rownames(featureSUM),horiz=TRUE,las=2,xlab=&quot;Proportion protected&quot;)
 abline(v = 0.3, col = &quot;red&quot;)</code></pre>
