@@ -457,12 +457,30 @@ legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not sel
 ```
 <br>
 
-* **Connectivity penalties:** Add penalties to favor solutions that select combinations of planning units with high connectivity between them. Connectivity is quantified as symmetric connectivity in a square matrix giving strength of pairwise connections.
+* **Connectivity penalties:** Add penalties to favour solutions that select combinations of planning units with high connectivity between them. Connectivity is quantified as symmetric connectivity in a square matrix giving strength of pairwise connections.
 
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
-problem() %>%  add_connectivity_penalties(penalty=X,data=Y)
+problem() %>% add_connectivity_penalties(penalty=X,data=Y)
 ```
 <br>
+
+* **Asymmetric connectivity penalties:** Add penalties to penalize solutions that select planning units according to a certain variable (e.g., anthropogenic pressure).
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_asym_connectivity_penalties(penalty=X,data=Y)
+```
+<br>
+
+* **Linear penalties:** As above but using asymmetric connectivity.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%  add_linear_penalties(penalty=X,data=Y)
+```
+<br>
+
+## 4.6. Decision types
+
+Conservation planning problems involve allocating management actions to specific planning units, e.g., turning a planning unit into a protected area.  
 
 # X. Other useful resources
 
