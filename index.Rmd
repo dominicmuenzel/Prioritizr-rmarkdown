@@ -41,6 +41,8 @@ library(geodata)
 library(terra)
 library(rgdal)
 library(prioritizr)
+library(lwgeom)
+
 ```
 <br>
 
@@ -50,15 +52,8 @@ In this example, our planning region will be Aceh, Indonesia.
   
 ```{r, warning=FALSE,message=FALSE,eval=TRUE}
 
-# download Indonesia shapefile
-study_area <- gadm(country="IDN", level=1, path=tempdir()) 
-
-# subset to Aceh
-study_area <- study_area %>% terra::subset(NAME_1=="Aceh",NSE=T) %>% as( "Spatial")
-
-# transform to projected CRS
-study_area_utm <-   CRS("+proj=aea +lat_0=-15 +lon_0=125 +lat_1=7 +lat_2=-32 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs") %>% 
-  spTransform(study_area, .)
+unzip("study_area_utm.zip")
+study_area_utm <- readOGR(dsn = ".", layer = "study_area_utm" )
 
 
 ```
@@ -414,6 +409,60 @@ problem() %>% add_mandatory_allocation_constraints()
 
 ## 4.5. Adding penalties
 
+We can also add penalties to a problem to favour or penalise solutions according to a secondary objective. Unlike the constraint functions, these functions add extra information to the objective function of the optimisation function to penalise solutions that do not exhibit specific characteristics. 
+
+* **Boundary penalties:** Add penalties to penalise solutions that are excessively fragmented.
+
+In the Aceh example, we could calculate the shared boundaries between hexagons as well as the total perimeter of each planning unit and create a more spatially aggregated solution. We store this information in **boundDF* which contains three columns: ID from, ID to, and boundary length.  
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+
+
+#Get a list of touching borders
+Touching_List <- st_touches(st_as_sf(hex_grid))
+
+#Get lines of intersection
+all.lines<-st_intersection(st_as_sf(hex_grid),st_as_sf(hex_grid))
+
+#Measure length of lines
+all.l_lines<-st_length(all.lines)
+
+#Create a boundary data frame. Since st_length calculates in metres, here we change to kilometres.
+boundDF<-data.frame("id1"=as.numeric(all.lines$ID),"id2"=as.numeric(all.lines$ID.1),"boundary"=as.numeric(all.l_lines)/1e3)
+
+#Calculate the perimeter of each hexagon, also changed to km.
+perimeters<-data.frame("ID"=hex_grid$ID,"perimeter"=as.numeric(st_perimeter(st_as_sf(hex_grid)))/1e3)
+
+#Replace the boundary of a hexagon to itself in boundDF with the newly calculated perimeters. This step is necessary as otherwise the boundaries of a hexagon to itself is 0. 
+boundDF$boundary[which(boundDF$id1==boundDF$id2)]<-perimeters$perimeter[match(boundDF$id1[which(boundDF$id1==boundDF$id2)],perimeters$ID)]
+
+#Add boundary penalty
+p1_bnd <- p1 %>% add_boundary_penalties(penalty=1,data=boundDF)
+
+#Solve the conservation planning problem
+s1_bnd<-solve(p1_bnd)
+
+#Create a vector for colouring the planning units 
+colorvector<-ifelse(s1_bnd$solution_1==1,"blue",NA)
+
+#Plot the solution and protected areas
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"),
+       fill=c(NA, "blue"),  cex=0.8,bg=NA)
+
+
+```
+<br>
+
+* **Connectivity penalties:** Add penalties to favor solutions that select combinations of planning units with high connectivity between them. Connectivity is quantified as symmetric connectivity in a square matrix giving strength of pairwise connections.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%  add_connectivity_penalties(penalty=X,data=Y)
+```
+<br>
 
 # X. Other useful resources
 
