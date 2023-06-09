@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
   
 This is an R Markdown tutorial on using *prioritizr* https://prioritizr.net/ to perform spatial conservation planning. 
 
-Prioritizr supports a broad range of objectives, constraints, and penalties allowing one to answer custom-tailored conservation planning exercises.
+Prioritizr supports a broad range of objectives, constraints, and penalties allowing you to answer custom-tailored conservation planning exercises.
 
 Elements it can incorporate include multiple management zones, structural connectivity, functional connectivity, amongst others.
 
@@ -234,7 +234,7 @@ p1 <- problem(puDF, featuresDF, cost_column = "cost",rij = rijDF) %>%
 s1<-solve(p1)
 
 #Create a vector for colouring the planning units 
- colorvector<-ifelse(s1$solution_1==1,"blue",NA)
+colorvector<-ifelse(s1$solution_1==1,"blue",NA)
 
 #Plot the solution
 plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
@@ -326,14 +326,94 @@ problem() %>% add_min_set_objective() %>% add_loglinear_targets(X)
 ```
 <br>
 
-# 4.4. Adding constraints
+## 4.4. Adding constraints
 
 Constraints can be added so that solutions exhibit a specific property. 
 
 * **Locked in constraints:** Certain planning units are selected in the solution from the start and kept in as solutions. Protected areas might be locked in. 
-```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+
+In the Aceh example, we could lock in all Protected Areas listed in https://www.protectedplanet.net/. 'wdpa aceh.zip' contains the Protected Areas in Aceh and can be found  [here](https://github.com/dominicmuenzel/Prioritizr-rmarkdown/blob/main/wdpa aceh.zip). 
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+#Load protected area shapefile
+unzip("wdpa aceh.zip")
+pas <- readOGR(dsn = ".", layer = "wdpa aceh" )
+
+#Get the IDs of the planning units which are overlapping with Protected Areas. In this case we are assuming a hexagon with only a partial overlap is completely protected, but in a real world example you would probably cut the hexagon into pieces.   
+overlap<-st_intersection(st_as_sf(hex_grid),st_as_sf(pas)) %>% st_drop_geometry() %>% dplyr::select("ID") %>% unname() %>% unlist ()%>% as.numeric() %>% unique()
+
+
+#Add locked in constraints
+p1_lck <- p1 %>% add_locked_in_constraints(locked_in=overlap)
+
+#Solve the conservation planning problem
+s1_lck<-solve(p1_lck)
+
+#Create a vector for colouring the planning units 
+colorvector<-ifelse(s1_lck$solution_1==1,"blue",NA)
+
+#Plot the solution and protected areas
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+plot(pas, border= "limegreen",col=NA,add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected","Protected Area"),
+       fill=c(NA, "blue","limegreen"),  cex=0.8,bg=NA)
+
 
 ```
+
+We can see that all planning units overlapping with protected areas are selected in the solution. However, as some targets are still not met with just protected areas, two additional planning units are also selected.
+
+If you re-run the evaluation (see 4.1.) you can compare how many planning units are selected, the cost of the solution, and what proportion of species ranges are protected.
+
+<br>
+
+* **Locked out constraints:** Certain planning units are never selected in the solution, for example areas which are not suitable (e.g. civil infrastructure) or highly degraded. 
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_locked_out_constraints(X)
+```
+<br>
+
+* **Neighbour constraints:** Ensure that all selected planning units have at least a certain number of neighbors. 
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_neighbor_constraints(X)
+```
+<br>
+
+* **Contiguity constraints:** Ensure that all selected planning units are spatially connected to each other and form spatially contiguous unit.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>%  add_contiguity_constraints()
+```
+<br>
+
+* **Feature contiguity constraints:** Ensure that each feature is represented in a contiguous unit of dispersible habitat.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_feature_contiguity_constraints()
+```
+<br>
+
+* **Linear constraints:** Ensure that all selected planning units meet certain criteria. For example, they can be used to add multiple budgets, or limit the number of planning units selected in different administrative areas within a study region (e.g., different countries).
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_linear_constraints()
+```
+<br>
+
+* **Mandatory allocation constraints:** Ensure that every planning unit is allocated to a management zone in the solution.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_mandatory_allocation_constraints()
+```
+<br>
+
+## 4.5. Adding penalties
+
 
 # X. Other useful resources
 
