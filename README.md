@@ -1,1 +1,1 @@
-# [R-Markdown](https://dominicmuenzel.github.io/Prioritizr-rmarkdown/)
+# [prioritizr tutorial](https://dominicmuenzel.github.io/Prioritizr-rmarkdown/)
