@@ -42,7 +42,9 @@ library(terra)
 library(rgdal)
 library(prioritizr)
 library(lwgeom)
-
+library(plotfunctions)
+library(RColorBrewer)
+library(classInt)
 ```
 <br>
 
@@ -209,7 +211,6 @@ As the cost, we use the area of the planning units. If we had other cost layers,
 
 ```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
 
-
 #Create the prioritizr problem
 p1 <- problem(puDF, featuresDF, cost_column = "cost",rij = rijDF) %>%
   
@@ -339,12 +340,19 @@ pas <- readOGR(dsn = ".", layer = "wdpa aceh" )
 overlap<-st_intersection(st_as_sf(hex_grid),st_as_sf(pas)) %>% st_drop_geometry() %>% dplyr::select("ID") %>% unname() %>% unlist ()%>% as.numeric() %>% unique()
 
 
-#Add locked in constraints
+#Add locked in constraints to the problem
 p1_lck <- p1 %>% add_locked_in_constraints(locked_in=overlap)
 
 #Solve the conservation planning problem
 s1_lck<-solve(p1_lck)
 
+```
+
+### {.tabset}
+
+#### Solution with locked in areas
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
 #Create a vector for colouring the planning units 
 colorvector<-ifelse(s1_lck$solution_1==1,"blue",NA)
 
@@ -355,9 +363,24 @@ plot(hex_grid, col=colorvector,border = "orange",add=T)
 plot(pas, border= "limegreen",col=NA,add=T)
 legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected","Protected Area"),
        fill=c(NA, "blue","limegreen"),  cex=0.8,bg=NA)
-
-
 ```
+
+#### Original solution without locked in areas
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+#Create a vector for colouring the planning units 
+colorvector<-ifelse(s1$solution_1==1,"blue",NA)
+
+#Plot the solution and protected areas
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"),
+       fill=c(NA, "blue"),  cex=0.8,bg=NA)
+```
+
+
+### {-}
 
 We can see that all planning units overlapping with protected areas are selected in the solution. However, as some targets are still not met with just protected areas, two additional planning units are also selected.
 
@@ -437,12 +460,22 @@ perimeters<-data.frame("ID"=hex_grid$ID,"perimeter"=as.numeric(st_perimeter(st_a
 #Replace the boundary of a hexagon to itself in boundDF with the newly calculated perimeters. This step is necessary as otherwise the boundaries of a hexagon to itself is 0. 
 boundDF$boundary[which(boundDF$id1==boundDF$id2)]<-perimeters$perimeter[match(boundDF$id1[which(boundDF$id1==boundDF$id2)],perimeters$ID)]
 
-#Add boundary penalty
+#Add boundary penalty to the problem
 p1_bnd <- p1 %>% add_boundary_penalties(penalty=1,data=boundDF)
 
 #Solve the conservation planning problem
 s1_bnd<-solve(p1_bnd)
 
+
+
+```
+<br>
+
+### {.tabset}
+
+#### Solution with boundary penalty
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
 #Create a vector for colouring the planning units 
 colorvector<-ifelse(s1_bnd$solution_1==1,"blue",NA)
 
@@ -450,12 +483,39 @@ colorvector<-ifelse(s1_bnd$solution_1==1,"blue",NA)
 plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
 text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
 plot(hex_grid, col=colorvector,border = "orange",add=T)
-legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"),
-       fill=c(NA, "blue"),  cex=0.8,bg=NA)
-
-
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"),fill=c(NA, "blue"),  cex=0.8,bg=NA)
 ```
-<br>
+
+#### Solution with locked in areas
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+#Create a vector for colouring the planning units 
+colorvector<-ifelse(s1_lck$solution_1==1,"blue",NA)
+
+#Plot the solution and protected areas
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+plot(pas, border= "limegreen",col=NA,add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected","Protected Area"),fill=c(NA, "blue","limegreen"),  cex=0.8,bg=NA)
+```
+
+#### Original solution without locked in areas
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+#Create a vector for colouring the planning units 
+colorvector<-ifelse(s1$solution_1==1,"blue",NA)
+
+#Plot the solution and protected areas
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"), fill=c(NA, "blue"),  cex=0.8,bg=NA)
+```
+
+
+### {-}
+
 
 * **Connectivity penalties:** Add penalties to favour solutions that select combinations of planning units with high connectivity between them. Connectivity is quantified as symmetric connectivity in a square matrix giving strength of pairwise connections.
 
@@ -464,14 +524,14 @@ problem() %>% add_connectivity_penalties(penalty=X,data=Y)
 ```
 <br>
 
-* **Asymmetric connectivity penalties:** Add penalties to penalize solutions that select planning units according to a certain variable (e.g., anthropogenic pressure).
+* **Asymmetric connectivity penalties:** As above but using asymmetric connectivity.
 
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
 problem() %>% add_asym_connectivity_penalties(penalty=X,data=Y)
 ```
 <br>
 
-* **Linear penalties:** As above but using asymmetric connectivity.
+* **Linear penalties:** Add penalties to penalise solutions that select planning units according to a certain variable (e.g., anthropogenic pressure).
 
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
 problem() %>%  add_linear_penalties(penalty=X,data=Y)
@@ -480,9 +540,276 @@ problem() %>%  add_linear_penalties(penalty=X,data=Y)
 
 ## 4.6. Decision types
 
-Conservation planning problems involve allocating management actions to specific planning units, e.g., turning a planning unit into a protected area.  
+Conservation planning problems involve allocating management actions to specific planning units, e.g., turning a planning unit into a protected area. 
 
-# X. Other useful resources
+
+* **Binary decisions:** Add a binary decision to a conservation planning problem. 
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_binary_decisions()
+```
+<br>
+
+
+* **Proportion decisions:** Add a proportion decision to a problem. This is a relaxed decision where a part of a planning unit can be prioritized, as opposed to the default of the entire planning unit.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_proportion_decisions()
+```
+<br>
+
+* **Semi-continuous decisions:** Add a semi-continuous decision to a problem. This decision is similar to proportion decisions except that it has an upper bound parameter.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_semicontinuous_decisions()
+```
+<br>
+
+## 4.7. Add a solver
+
+Prioritizr can use many different algorithm solvers, some are faster than others, some are free and some are not.
+
+With an academic e-mail you can use Gurobi for free (the fastest one). https://www.gurobi.com/
+
+## 4.8. Add a portfolio
+
+Until now we have only generated a single optimal solution. In some cases, it may instead be desirable to produce a range of near-optimal solutions. This can give decision-makers options and show which areas tend to be relatively important as they are often selected across solutions.
+
+* **Gap portfolio:** Generate a portfolio of solutions by finding a certain number of solutions that are all within a pre-specified optimality gap.
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+#Create 5 solutions which are within 10% optimality
+p1_prt <- p1 %>% add_gap_portfolio(number_solutions = 5, pool_gap = 0.1)
+
+#Solve the conservation planning problem
+s1_prt<-solve(p1_prt)
+
+```
+<br>
+
+### {.tabset}
+
+#### Solution with portfolio
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+
+colorvector<-rowSums(s1_prt[,3:7])
+
+colorvector<-recode(colorvector,"0"=NULL,
+                    "1"="#CCCCFF" ,
+                    "2"="#9999FF" ,
+                    "3"="#6565FF",
+                    "4"="#3232FF",
+                    "5"="#0000FF")
+
+
+#Plot the Aceh shapefile and planning unit grid
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.92, legend=c("Not selected", "Selected 1x", "Selected 2x", "Selected 3x", "Selected 4x", "Selected 5x"),fill=c(NA, "#CCCCFF", "#9999FF", "#6565FF", "#3232FF", "#0000FF"),  cex=0.8,bg=NA)
+
+```
+
+#### Solution with boundary penalty
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+#Create a vector for colouring the planning units 
+colorvector<-ifelse(s1_bnd$solution_1==1,"blue",NA)
+
+#Plot the solution and protected areas
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"),fill=c(NA, "blue"),  cex=0.8,bg=NA)
+```
+
+#### Solution with locked in areas
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+#Create a vector for colouring the planning units 
+colorvector<-ifelse(s1_lck$solution_1==1,"blue",NA)
+
+#Plot the solution and protected areas
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+plot(pas, border= "limegreen",col=NA,add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected","Protected Area"),fill=c(NA, "blue","limegreen"),  cex=0.8,bg=NA)
+```
+
+#### Original solution without locked in areas
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+#Create a vector for colouring the planning units 
+colorvector<-ifelse(s1$solution_1==1,"blue",NA)
+
+#Plot the solution and protected areas
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+legend(ext(study_area_utm)[2]*.99, ext(study_area_utm)[4]*.87, legend=c("Not selected", "Selected"), fill=c(NA, "blue"),  cex=0.8,bg=NA)
+```
+
+### {-}
+
+* **Top portfolio:** Generate a portfolio of solutions by finding a pre-specified number of solutions that are closest to optimality (i.e the top solutions).
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_extra_portfolio()
+```
+<br>
+
+* **Cuts portfolio:** Generate a portfolio of distinct solutions within a pre-specified optimality gap. 
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_cuts_portfolio()
+```
+<br>
+
+* **Shuffle portfolio:** Generate a portfolio of solutions by randomly reordering the data prior to attempting to solve the problem.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_shuffle_portfolio()
+```
+<br>
+
+# 5. Evaluating the solution
+
+## 5.1. Evaluating performance 
+
+In section 4.1. we already looked at some performance evaluations, including total number of planning units in the solution, total cost, and feature representation. There are some others which may be informative.
+
+* **Boundary summary:** Calculate the total exposed boundary length (perimeter) associated with a solution.
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE}
+
+# calculate total boundary statistic
+eval_boundary_summary(p1_bnd, data.frame(s1_bnd$solution_1),data=boundDF)
+
+```
+<br>
+
+
+* **Connectivity summary:** Calculate the connectivity of a solution using symmetric connectivity data.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+
+#calculate total connectivity, data supplied is a connectivity adjacency matrix
+eval_connectivity_summary(problem, solution, data = X)
+```
+<br>
+
+
+* **Asymmetric connectivity summary:** As above but for asymmetric connectivity.
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+
+#calculate total connectivity, data supplied is a connectivity adjacency matrix
+eval_asym_connectivity_summary(problem, solution, data = X)
+```
+<br>
+
+## 5.2. Evaluating relative importance
+
+Not all planning units that are selected in a solution are equally important. Some may be more irreplaceable or contain more rare features. If we rank their importance, we can inform management scheduling if, for example, resources are limited and the entire solution cannot be allocated at once.
+
+Importance can be quantified in different ways.
+
+* **Replacement cost:** Quantify the importance of a given planning unit as the decrease in the performance of the solution if the planning unit cannot be acquired. 
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+#calculate replacement cost scores
+p1_rplc <- p1 %>%  eval_replacement_importance(data.frame(s1$solution_1))
+
+```
+<br>
+
+* **Ferrier method:** Evaluate importance by computing irreplaceability scores following Ferrier et al. 
+https://doi.org/10.1016/S0006-3207(99)00149-4
+
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+#calculate irreplaceability scores
+p1_frr <- eval_ferrier_importance(p1,data.frame(s1$solution_1))[["total"]]
+
+```
+<br>
+
+* **Rarity weighted richness:** Evaluate importance by computing rarity weighted richness scores
+https://www.jstor.org/stable/2386953 
+
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
+
+#calculate rarity weighted richness scores
+p1_rwr <- eval_rare_richness_importance(p1,data.frame(s1$solution_1))
+
+```
+<br>
+
+### {.tabset}
+
+#### Replacement cost
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+
+# color gradient
+n=10
+pal <- rev(brewer.pal(n, "Spectral"))
+int=classIntervals(p1_rplc$rc,n)
+colorvector=pal[findInterval(p1_rplc$rc,seq(from=0,to=max(p1_rplc$rc),length.out=10),all.inside = T)]
+
+#Plot the Aceh shapefile and planning unit grid
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+gradientLegend(c(0,max(p1_rplc$rc)),pal,pos=c(.95,.1,.9,.9))
+
+```
+
+#### Ferrier irreplaceability
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+# color gradient
+n=10
+pal <- rev(brewer.pal(n, "Spectral"))
+int=classIntervals(p1_frr,n)
+colorvector=pal[findInterval(p1_frr,seq(from=0,to=max(p1_frr),length.out=10),all.inside = T)]
+
+#Plot the Aceh shapefile and planning unit grid
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+gradientLegend(c(0,max(p1_frr)),pal,pos=c(.95,.1,.9,.9))
+```
+
+#### Rarity weighted richness
+
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide',echo=FALSE}
+# color gradient
+n=10
+pal <- rev(brewer.pal(n, "Spectral"))
+int=classIntervals(p1_rwr$rwr,n)
+colorvector=pal[findInterval(p1_rwr$rwr,seq(from=0,to=max(p1_rwr$rwr),length.out=10),all.inside = T)]
+
+#Plot the Aceh shapefile and planning unit grid
+plot(study_area_utm,col = "grey50", bg = "light blue", axes = TRUE, cex = 20)
+text(ext(study_area_utm)[2], ext(study_area_utm)[4]*.99, paste0("Study Area:\n",study_area_utm$NAME_1))
+plot(hex_grid, col=colorvector,border = "orange",add=T)
+gradientLegend(c(0,max(p1_rwr$rwr)),pal,pos=c(.95,.1,.9,.9))
+```
+
+
+### {-}
+
+
+
+
+# 6. Other useful resources
 
 Calibrating trade-offs tutorial https://cran.r-project.org/web/packages/prioritizr/vignettes/calibrating_trade-offs_tutorial.html 
 
