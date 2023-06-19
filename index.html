@@ -1529,13 +1529,10 @@ library(classInt)</code></pre>
 </div>
 <div id="setting-up-study-area-and-planning-unit-grid" class="section level1">
 <h1>2. Setting up study area and planning unit grid</h1>
-<p>In this example, our planning region will be Aceh, Indonesia.</p>
+<p>In this example, our planning region will be Aceh, Indonesia. This
+file can be found <a href="https://github.com/dominicmuenzel/Prioritizr-rmarkdown/blob/main/study_area_utm.zip">here</a>.</p>
 <pre class="r"><code>unzip(&quot;study_area_utm.zip&quot;)
 study_area_utm &lt;- readOGR(dsn = &quot;.&quot;, layer = &quot;study_area_utm&quot; )</code></pre>
-<pre><code>## OGR data source with driver: ESRI Shapefile 
-## Source: &quot;E:\github\Prioritizr-rmarkdown&quot;, layer: &quot;study_area_utm&quot;
-## with 1 features
-## It has 11 fields</code></pre>
 <p><br></p>
 <p>Next, we will create a hexagonal planning unit grid. A planning unit
 is a spatial management unit which is either selected or not selected in

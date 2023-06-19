@@ -50,9 +50,9 @@ library(classInt)
 
 # 2. Setting up study area and planning unit grid
   
-In this example, our planning region will be Aceh, Indonesia. 
+In this example, our planning region will be Aceh, Indonesia. This file can be found [here](https://github.com/dominicmuenzel/Prioritizr-rmarkdown/blob/main/study_area_utm.zip).
   
-```{r, warning=FALSE,message=FALSE,eval=TRUE}
+```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
 
 unzip("study_area_utm.zip")
 study_area_utm <- readOGR(dsn = ".", layer = "study_area_utm" )
