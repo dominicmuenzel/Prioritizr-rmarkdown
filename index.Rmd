@@ -280,6 +280,8 @@ problem() %>% add_max_features_objective(budget = X)
 ```
 <br>
 
+
+
 * **Minimum shortfall objective:** Minimise the overall (weighted sum) shortfall for as many targets as possible while ensuring that the cost of the solution does not exceed a budget.
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
 problem() %>% add_min_shortfall_objective(budget = X)
@@ -682,6 +684,18 @@ problem() %>% add_cuts_portfolio()
 
 ```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
 problem() %>% add_shuffle_portfolio()
+```
+<br>
+
+## 4.9. Adding feature weights
+
+Some objective functions aim to maximise or minimise a metric that measures how well a set of features are represented by a solution (e.g. maximum features objective, minimum shortfall objective). It may be desirable to prefer the representation of some features over others, for example those that have higher extinction risk.
+
+We can add weights to specify how much more important it is for a solution to represent particular features compared with other features.
+
+
+```{r, warning=FALSE,message=FALSE,eval=FALSE,results='hide'}
+problem() %>% add_feature_weights(X)
 ```
 <br>
 

@@ -2085,6 +2085,19 @@ the problem.</li>
 <p><br></p>
 </div>
 </div>
+<div id="adding-feature-weights" class="section level2">
+<h2>4.9. Adding feature weights</h2>
+<p>Some objective functions aim to maximise or minimise a metric that
+measures how well a set of features are represented by a solution
+(e.g. maximum features objective, minimum shortfall objective). It may
+be desirable to prefer the representation of some features over others,
+for example those that have higher extinction risk.</p>
+<p>We can add weights to specify how much more important it is for a
+solution to represent particular features compared with other
+features.</p>
+<pre class="r"><code>problem() %&gt;% add_feature_weights(X)</code></pre>
+<p><br></p>
+</div>
 </div>
 <div id="evaluating-the-solution" class="section level1">
 <h1>5. Evaluating the solution</h1>
