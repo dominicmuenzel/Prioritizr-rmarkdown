@@ -448,7 +448,7 @@ We can also add penalties to a problem to favour or penalise solutions according
 
 * **Boundary penalties:** Add penalties to penalise solutions that are excessively fragmented.
 
-In the Aceh example, we could calculate the shared boundaries between hexagons as well as the total perimeter of each planning unit and create a more spatially aggregated solution. We store this information in **boundDF* which contains three columns: ID from, ID to, and boundary length.  
+In the Aceh example, we could calculate the shared boundaries between hexagons as well as the total perimeter of each planning unit and create a more spatially aggregated solution. We store this information in **boundDF** which contains three columns: ID from, ID to, and boundary length.  
 
 ```{r, warning=FALSE,message=FALSE,eval=TRUE,results='hide'}
 

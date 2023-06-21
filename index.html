@@ -1923,8 +1923,8 @@ solutions that are excessively fragmented.</li>
 <p>In the Aceh example, we could calculate the shared boundaries between
 hexagons as well as the total perimeter of each planning unit and create
 a more spatially aggregated solution. We store this information in
-**boundDF* which contains three columns: ID from, ID to, and boundary
-length.</p>
+<strong>boundDF</strong> which contains three columns: ID from, ID to,
+and boundary length.</p>
 <pre class="r"><code>#Get a list of touching borders
 Touching_List &lt;- st_touches(st_as_sf(hex_grid))
 
